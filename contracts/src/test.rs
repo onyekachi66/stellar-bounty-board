@@ -571,6 +571,27 @@ fn test_dispute_bounty_native_xlm() {
 
     let bounty = client.get_bounty(&bounty_id);
     assert_eq!(bounty.status, BountyStatus::Disputed);
+
+    let events = env.events().all().filter_by_contract(&client.address);
+    let dispute_event = events.events().last().unwrap();
+    let topics = dispute_event.topics();
+    assert_eq!(
+        topics.get(0).unwrap(),
+        symbol_short!("Bounty").into_val(&env)
+    );
+    assert_eq!(
+        topics.get(1).unwrap(),
+        symbol_short!("Dispt").into_val(&env)
+    );
+    assert_eq!(
+        dispute_event.data(),
+        BountyDisputed {
+            bounty_id,
+            contributor,
+            arbiter: maintainer,
+        }
+        .into_val(&env)
+    );
 }
 
 #[test]

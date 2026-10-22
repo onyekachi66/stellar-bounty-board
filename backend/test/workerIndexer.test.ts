@@ -34,4 +34,37 @@ describe("Soroban indexer event normalization", () => {
       timestamp: "2026-10-21T12:00:00Z",
     });
   });
+
+  it("normalizes a Bounty/Dispt event with its complete payload", () => {
+    const contributor = Keypair.random().publicKey();
+    const arbiter = Keypair.random().publicKey();
+    const topic = (name: string) => xdr.ScVal.scvSymbol(name).toXDR("base64");
+    const value = nativeToScVal(
+      { bounty_id: 15n, contributor, arbiter },
+      {
+        type: {
+          bounty_id: ["symbol", "u64"],
+          contributor: ["symbol", "address"],
+          arbiter: ["symbol", "address"],
+        },
+      },
+    ).toXDR("base64");
+
+    expect(
+      normalizeEvent({
+        id: "event-15",
+        topic: [topic("Bounty"), topic("Dispt")],
+        value,
+        ledger_closed_at: "2026-10-22T05:00:00Z",
+      }),
+    ).toMatchObject({
+      id: "event-15",
+      type: "disputed",
+      bountyId: "15",
+      actor: contributor,
+      contributor,
+      arbiter,
+      timestamp: "2026-10-22T05:00:00Z",
+    });
+  });
 });

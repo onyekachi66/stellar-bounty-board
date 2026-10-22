@@ -49,6 +49,7 @@ const EVENT_TYPES = {
   Reserv: "reserve",
   Releas: "release",
   Refund: "refund",
+  Dispt: "disputed",
 };
 
 function decodeScVal(value) {
@@ -82,13 +83,17 @@ export function normalizeEvent(event) {
   const data = eventData(event.value ?? event.data ?? event);
   const bountyId = data.bounty_id ?? data.bountyId ?? event.bounty_id;
   const maintainer = addressString(data.maintainer ?? event.maintainer);
+  const contributor = addressString(data.contributor ?? event.contributor);
+  const arbiter = addressString(data.arbiter ?? event.arbiter);
 
   return {
     id: event.id ?? event.paging_token ?? event.pagingToken,
     type: EVENT_TYPES[topics[1]] ?? event.type,
     bountyId: jsonSafe(bountyId),
-    actor: maintainer ?? addressString(data.contributor ?? event.actor),
+    actor: maintainer ?? contributor ?? addressString(event.actor),
     maintainer,
+    contributor,
+    arbiter,
     amount: jsonSafe(data.amount ?? event.amount),
     timestamp: event.ledger_closed_at ?? event.ledgerClosedAt ?? event.timestamp,
     raw: event,
